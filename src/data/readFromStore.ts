@@ -220,10 +220,21 @@ export function diffQueryAgainstStore({
     previousResult,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
-    fragmentMatcher: fragmentMatcherFunction,
-    resultMapper,
-  });
+  var result = null;
+  var win = <any>window;
+  var queryBody = query.loc ? (query.loc.source ? query.loc.source.body : '') : '';
+  if(!win.faApolloCacheMap) {
+    win.faApolloCacheMap = {};
+  }
+  if (!win.faApolloCacheMap[queryBody]) {
+    result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
+      fragmentMatcher: fragmentMatcherFunction,
+      resultMapper: resultMapper,
+    });
+    //console.log("Caching result", result);
+    win.faApolloCacheMap[queryBody] = result;
+  }
+  result = win.faApolloCacheMap[queryBody];
 
   return {
     result,
