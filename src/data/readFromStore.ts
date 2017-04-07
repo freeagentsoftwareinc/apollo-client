@@ -223,6 +223,9 @@ export function diffQueryAgainstStore({
   var result = null;
   var win = <any>window;
   var queryBody = query.loc ? (query.loc.source ? query.loc.source.body : '') : '';
+  if (variables) {
+    queryBody += JSON.stringify(variables);
+  }
   if(!win.faApolloCacheMap) {
     win.faApolloCacheMap = {};
   }
