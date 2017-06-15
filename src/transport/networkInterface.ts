@@ -33,7 +33,7 @@ export interface Request {
   debugName?: string;
   query?: DocumentNode;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
   [additionalKey: string]: any;
 }
 
@@ -43,7 +43,7 @@ export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
 }
 
 export interface NetworkInterface {
@@ -184,7 +184,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         ...(options.headers as { [headerName: string]: string }),
       },
     });
-  };
+  }
 
   public query(request: Request): Promise<ExecutionResult> {
     const options = { ...this._opts };
@@ -200,9 +200,10 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
       .then(({ response }) => {
         const httpResponse = response as Response;
 
-        return httpResponse.json().catch(() => {
+        return httpResponse.json().catch((error) => {
           const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
           (httpError as any).response = httpResponse;
+          (httpError as any).parseError = error;
 
           throw httpError;
         });
@@ -216,7 +217,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
           return payload as ExecutionResult;
         }
       });
-  };
+  }
 
   public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
     middlewares.map((middleware) => {

@@ -2,8 +2,15 @@ import {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
+  ValueNode,
 } from 'graphql';
 
+
+import {
+  valueToObjectRepresentation,
+} from '../data/storeUtils';
+
+import { assign } from '../util/assign';
 
 export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
@@ -52,8 +59,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   });
 }
 
-export function getOperationName(doc: DocumentNode): string {
-  let res: string = '';
+export function getOperationName(doc: DocumentNode): string | null {
+  let res: string | null = null;
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition' && definition.name) {
       res = definition.name.value;
@@ -228,4 +235,25 @@ export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: 
   };
 
   return query;
+}
+
+export function getDefaultValues(definition: OperationDefinitionNode): { [key: string]: any } {
+  if (definition.variableDefinitions && definition.variableDefinitions.length) {
+    const defaultValues = definition.variableDefinitions
+      .filter(({ defaultValue }) => defaultValue)
+      .map(({ variable, defaultValue }): { [key: string]: any } => {
+        const defaultValueObj: { [key: string]: any } = {};
+        valueToObjectRepresentation(
+          defaultValueObj,
+          variable.name,
+          defaultValue as ValueNode,
+        );
+
+        return defaultValueObj;
+      });
+
+    return assign({}, ...defaultValues);
+  }
+
+  return {};
 }

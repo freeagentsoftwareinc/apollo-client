@@ -1,8 +1,61 @@
 # Change log
 
-Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
-
 ### vNEXT
+
+### 1.4.2
+- Improved error messages for writeToStore, readFragment and writeFragment [PR #1766](https://github.com/apollographql/apollo-client/pull/1766), [PR #1722](https://github.com/apollographql/apollo-client/pull/1722)
+
+### 1.4.1
+- Fix: broken edge case when setting up fragment matching with Typescript by fixing types on `IntrospectionResultData` [PR #1763](https://github.com/apollographql/apollo-client/pull/1763)
+- Fix: getOperationName now returns null when no operation name can be found in the document [PR #1769](https://github.com/apollographql/apollo-client/pull/1769)
+
+### v1.4.0
+- Feature: Add `operationName` to Redux actions where possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
+- Feature: Allow an observer to not be created when setting variables[PR #1752](https://github.com/apollographql/apollo-client/pull/1752)
+- Feature: Added support for flow typechecking [PR #1688](https://github.com/apollographql/apollo-client/pull/1688)
+
+### v1.3.0
+- Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)
+- Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
+- Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation [PR #1720](https://github.com/apollographql/apollo-client/pull/1720)
+
+### 1.2.2
+- Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)
+- Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
+
+### 1.2.1
+- Fix: Ensure polling queries do not poll during SSR [#1664](https://github.com/apollographql/apollo-client/pull/1664)
+- Fix: Ensure setVariables correctly sets options.variables [#1662](https://github.com/apollographql/apollo-client/pull/1662)
+- Fix bug that caused results with null items in array to become empty on second read [#1661](https://github.com/apollographql/apollo-client/pull/1661)
+
+### 1.2.0
+- Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)
+- Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)
+
+### 1.1.2
+- Feature+Fix: Introduce "standby" fetchPolicy to mark queries that are not currently active, but should be available for refetchQueries and updateQueries [PR #1636](https://github.com/apollographql/apollo-client/pull/1636)
+- Feature: Print a warning when heuristically matching fragments on interface/union [PR #1635](https://github.com/apollographql/apollo-client/pull/1635)
+- Fix: Replace usage of Object.assign with util.assign to make it work in IE, make util.assign work with undefined and null sources as Object.assign does [PR #1643](https://github.com/apollographql/apollo-client/pull/1643)
+
+### 1.1.1
+- Fix: Remove ability to set default fetchPolicy, which broke polling queries [PR #1630](https://github.com/apollographql/apollo-client/pull/1630)
+
+### 1.1.0
+- Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
+- Fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
+- Feature: Add ability to set default fetchPolicy [PR #1597](https://github.com/apollographql/apollo-client/pull/1597)
+
+### 1.0.4
+- Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)
+- Fix: ObservableQuery.refetch() returns a rejected Promise instead of throwing an Error when fetchPolicy === 'cache-only' [PR #1592](https://github.com/apollographql/apollo-client/pull/1592)
+- Fix: Remove usage of Array.findIndex (not supported by IE) [PR #1585](https://github.com/apollographql/apollo-client/pull/1585)
+
+### 1.0.3
+- Fix: Remove usage of String.endsWith (not supported by IE) [PR #1583](https://github.com/apollographql/apollo-client/pull/1583)
+- Make reducerError contain information about which query caused it [PR #1538](https://github.com/apollographql/apollo-client/pull/1538)
+
+### 1.0.2
+- Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)
 
 ### 1.0.1
 - Fix bug that caused updateQueries to fail when fragments were present in query [#1527](https://github.com/apollographql/apollo-client/issues/1527)
@@ -17,7 +70,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
 
 ### 1.0.0-rc.7
-- Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
+- Fix: `fetchPolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 - Fix: query deduplication no longer causes query errors to prevent subsequent successful execution of the same query  [PR #1481](https://github.com/apollographql/apollo-client/pull/1481)
 - Breaking: change default of notifyOnNetworkStatusChange back to false [PR #1482](https://github.com/apollographql/apollo-client/pull/1482)
 - Feature: add fragmentMatcher option to client and implement IntrospectionFragmentMatcher [PR #1483](https://github.com/apollographql/apollo-client/pull/1483)

@@ -29,11 +29,14 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 import { isEqual } from '../util/isEqual';
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
-
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
  } from '../queries/networkStatus';
+
+import {
+  getOperationName,
+} from '../queries/getFromAST';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -103,18 +106,37 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public result(): Promise<ApolloQueryResult<T>> {
+    const that = this;
     return new Promise((resolve, reject) => {
-      const subscription = this.subscribe({
+      let subscription: (Subscription | null) = null;
+      const observer: Observer<ApolloQueryResult<T>> = {
         next(result) {
           resolve(result);
+
+          // Stop the query within the QueryManager if we can before
+          // this function returns.
+          //
+          // We do this in order to prevent observers piling up within
+          // the QueryManager. Notice that we only fully unsubscribe
+          // from the subscription in a setTimeout(..., 0)  call. This call can
+          // actually be handled by the browser at a much later time. If queries
+          // are fired in the meantime, observers that should have been removed
+          // from the QueryManager will continue to fire, causing an unnecessary
+          // performance hit.
+          const selectedObservers = that.observers.filter((obs: Observer<ApolloQueryResult<T>>) => obs !== observer);
+          if (selectedObservers.length === 0) {
+            that.queryManager.removeQuery(that.queryId);
+          }
+
           setTimeout(() => {
-            subscription.unsubscribe();
+            (subscription as Subscription).unsubscribe();
           }, 0);
         },
         error(error) {
           reject(error);
         },
-      });
+      };
+      subscription = that.subscribe(observer);
     });
   }
 
@@ -181,7 +203,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     };
 
     if (this.options.fetchPolicy === 'cache-only') {
-      throw new Error('cache-only fetchPolicy option should not be used together with query refetch.');
+      return Promise.reject(new Error('cache-only fetchPolicy option should not be used together with query refetch.'));
     }
 
     // Update the existing options with new variables
@@ -245,7 +267,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           const queryVariables = variables;
           return reducer(
             previousResult, {
-              fetchMoreResult: data,
+              fetchMoreResult: data as Object,
               queryVariables,
             });
         };
@@ -318,9 +340,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // If fetchPolicy went from cache-only to something else, or from something else to network-only
     const tryFetch: boolean = (oldOptions.fetchPolicy !== 'network-only' && opts.fetchPolicy === 'network-only')
       || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
+      || (oldOptions.fetchPolicy === 'standby' && opts.fetchPolicy !== 'standby')
       || false;
 
-    return this.setVariables(this.options.variables, tryFetch);
+    return this.setVariables(this.options.variables, tryFetch, opts.fetchResults);
   }
 
   /**
@@ -339,8 +362,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * @param tryFetch: Try and fetch new results even if the variables haven't
    * changed (we may still just hit the store, but if there's nothing in there
    * this will refetch)
+   *
+   * @param fetchResults: Option to ignore fetching results when updating variables
+   *
    */
-  public setVariables(variables: any, tryFetch: boolean = false): Promise<ApolloQueryResult<T>> {
+  public setVariables(variables: any, tryFetch: boolean = false, fetchResults = true): Promise<ApolloQueryResult<T>> {
     const newVariables = {
       ...this.variables,
       ...variables,
@@ -350,13 +376,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      if (this.observers.length === 0) {
+      if (this.observers.length === 0 || !fetchResults) {
         return new Promise((resolve) => resolve());
       }
 
       return this.result();
     } else {
       this.variables = newVariables;
+      this.options.variables = newVariables;
 
       // See comment above
       if (this.observers.length === 0) {
@@ -390,6 +417,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         newResult,
         variables,
         document,
+        operationName: getOperationName(document),
       });
     }
   }
@@ -434,7 +462,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     const retQuerySubscription = {
       unsubscribe: () => {
-        if (this.observers.findIndex(el => el === observer) < 0 ) {
+        if (!this.observers.some(el => el === observer)) {
           // XXX can't unsubscribe if you've already unsubscribed...
           // for some reason unsubscribe gets called multiple times by some of the tests
           return;

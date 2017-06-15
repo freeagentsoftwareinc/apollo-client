@@ -23,7 +23,11 @@ import mockWatchQuery from './mocks/mockWatchQuery';
 import mockNetworkInterface, {
   ParsedRequest,
 } from './mocks/mockNetworkInterface';
-import { ObservableQuery } from '../src/core/ObservableQuery';
+import {
+  ObservableQuery,
+  ApolloCurrentResult,
+} from '../src/core/ObservableQuery';
+import { ApolloQueryResult } from '../src/core/types';
 import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
@@ -239,6 +243,40 @@ describe('ObservableQuery', () => {
       });
     });
 
+
+    it('if query is refetched, and an error is returned, a second refetch without error will trigger the observer callback', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { errors: [error] },
+      }, {
+        request: { query, variables },
+        result: { data: dataOne },
+      });
+
+      let handleCount = 0;
+      observable.subscribe({
+        next: (result) => {
+          handleCount++;
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, dataOne);
+            observable.refetch();
+          } else if (handleCount === 3) {
+            assert.deepEqual(result.data, dataOne);
+            done();
+          }
+        },
+        error: (err) => {
+          handleCount++;
+          assert.equal(handleCount, 2);
+          observable.refetch();
+        },
+      });
+    });
+
+
     it('does a network request if fetchPolicy becomes networkOnly', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
@@ -259,7 +297,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if cachePolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
+    it('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -355,6 +393,154 @@ describe('ObservableQuery', () => {
         }
       });
     });
+
+    it('can set queries to standby and will not fetch when doing so', (done) => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<ExecutionResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      observable = queryManager.watchQuery({
+        query: testQuery,
+        fetchPolicy: 'cache-first',
+        notifyOnNetworkStatusChange: false,
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          assert.equal(timesFired, 1);
+
+          setTimeout(() => {
+            observable.setOptions({fetchPolicy: 'standby'});
+          }, 0);
+          setTimeout(() => {
+            // make sure the query didn't get fired again.
+            assert.equal(timesFired, 1);
+            done();
+          }, 20);
+        } else if (handleCount === 2) {
+          assert(false, 'Handle should not be triggered on standby query');
+        }
+      });
+    });
+
+    it('will not fetch when setting a cache-only query to standby', (done) => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<ExecutionResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+
+      queryManager.query({ query: testQuery }).then( () => {
+        observable = queryManager.watchQuery({
+          query: testQuery,
+          fetchPolicy: 'cache-first',
+          notifyOnNetworkStatusChange: false,
+        });
+
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, data);
+            assert.equal(timesFired, 1);
+            setTimeout(() => {
+              observable.setOptions({fetchPolicy: 'standby'});
+            }, 0);
+            setTimeout(() => {
+              // make sure the query didn't get fired again.
+              assert.equal(timesFired, 1);
+              done();
+            }, 20);
+          } else if (handleCount === 2) {
+            assert(false, 'Handle should not be triggered on standby query');
+          }
+        });
+      });
+    });
+    it('returns a promise which eventually returns data', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount !== 1) {
+          return;
+        }
+        observable.setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
+          .then((res) => {
+            // returns dataOne from cache
+            assert.deepEqual(res.data, dataOne);
+            done();
+          });
+      });
+    });
+    it('can bypass looking up results if passed to options', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let errored = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          observable.setOptions({ fetchResults: false, fetchPolicy: 'standby' })
+            .then((res) => {
+              assert.equal(res, null);
+              setTimeout(() => !errored && done(), 5);
+            });
+        } else if (handleCount > 1) {
+          errored = true;
+          throw new Error('Handle should not be called twice');
+        }
+      });
+    });
+
   });
 
   describe('setVariables', () => {
@@ -564,6 +750,30 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('does not rerun query if set to not refetch', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let errored = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(variables, true, false);
+
+          // Nothing should happen, so we'll wait a moment to check that
+          setTimeout(() => !errored && done(), 10);
+        } else if (handleCount === 2) {
+          errored = true;
+          throw new Error('Observable callback should not fire twice');
+        }
+      });
+    });
+
     it('handles variables changing while a query is in-flight', (done) => {
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables
@@ -698,7 +908,7 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(done, observable, () => {
-        assert.deepEqual(observable.currentResult(), {
+        assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -707,14 +917,14 @@ describe('ObservableQuery', () => {
         done();
       });
 
-      assert.deepEqual(observable.currentResult(), {
+      assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
         loading: true,
         data: {},
         networkStatus: 1,
         partial: true,
       });
       setTimeout(wrap(done, () => {
-        assert.deepEqual(observable.currentResult(), {
+        assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
           loading: true,
           data: {},
           networkStatus: 1,
@@ -741,7 +951,7 @@ describe('ObservableQuery', () => {
             query,
             variables,
           });
-          assert.deepEqual(observable.currentResult(), {
+          assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
             data: dataOne,
             loading: false,
             networkStatus: 7,
@@ -788,7 +998,7 @@ describe('ObservableQuery', () => {
             variables,
             fetchPolicy: 'network-only',
           });
-          assert.deepEqual(observable.currentResult(), {
+          assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
             data: dataOne,
             loading: true,
             networkStatus: 1,
@@ -800,7 +1010,7 @@ describe('ObservableQuery', () => {
             assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
 
             if (handleCount === 1) {
-              assert.deepEqual(subResult, {
+              assert.deepEqual<ApolloQueryResult<any>>(subResult, {
                 data: dataTwo,
                 loading: false,
                 networkStatus: 7,
@@ -854,7 +1064,7 @@ describe('ObservableQuery', () => {
           assert.deepEqual(result, { data, loading, networkStatus, stale: false });
 
           if (count === 1) {
-            assert.deepEqual(result, {
+            assert.deepEqual<ApolloQueryResult<any>>(result, {
               data: dataOne,
               loading: false,
               networkStatus: 7,

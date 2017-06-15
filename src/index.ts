@@ -2,6 +2,7 @@ import {
   Request,
   createNetworkInterface,
   NetworkInterface,
+  SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
 } from './transport/networkInterface';
 
@@ -22,6 +23,8 @@ import {
 
 import {
   ObservableQuery,
+  FetchMoreOptions,
+  UpdateQueryOptions,
 } from './core/ObservableQuery';
 
 import {
@@ -33,6 +36,8 @@ import {
   MutationOptions,
   SubscriptionOptions,
   FetchPolicy,
+  FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -49,6 +54,7 @@ import {
 
 import {
   getQueryDefinition,
+  getMutationDefinition,
   getFragmentDefinitions,
   FragmentMap,
   createFragmentMap,
@@ -93,6 +99,7 @@ export {
   NetworkStatus,
   ApolloError,
   getQueryDefinition,
+  getMutationDefinition,
   getFragmentDefinitions,
   FragmentMap,
   Request,
@@ -108,6 +115,7 @@ export {
 
   // Internal type definitions
   NetworkInterface,
+  SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
   HTTPBatchedNetworkInterface,
   FetchPolicy,
@@ -118,7 +126,11 @@ export {
   Subscription,
   SubscriptionOptions,
   ApolloStore,
-  ApolloClient
+  ApolloClient,
+  FetchMoreOptions,
+  UpdateQueryOptions,
+  FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
 };
 
 export default ApolloClient;

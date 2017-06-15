@@ -4,6 +4,7 @@ import {
 } from './transport/networkInterface';
 
 import {
+  ExecutionResult,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
@@ -128,7 +129,14 @@ export default class ApolloClient implements DataProxy {
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
   public dataId: IdGetter | undefined;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
+  public dataIdFromObject: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
@@ -136,6 +144,7 @@ export default class ApolloClient implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
   private fragmentMatcher: FragmentMatcherInterface;
+  private ssrMode: boolean;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -213,8 +222,10 @@ export default class ApolloClient implements DataProxy {
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
+    this.dataIdFromObject = this.dataId;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
+    this.ssrMode = ssrMode;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
@@ -296,7 +307,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     return this.queryManager.watchQuery<T>(options);
-  };
+  }
 
   /**
    * This resolves a single query according to the options specified and returns a
@@ -323,7 +334,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     return this.queryManager.query<T>(options);
-  };
+  }
 
   /**
    * This resolves a single mutation according to the options specified and returns a
@@ -332,11 +343,11 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
+  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);
-  };
+  }
 
   public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
@@ -467,7 +478,7 @@ export default class ApolloClient implements DataProxy {
         return result;
       },
     }));
-  };
+  }
 
   /**
    * Resets your entire store by clearing out your cache and then re-executing
@@ -485,11 +496,9 @@ export default class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore() {
-    if (this.queryManager) {
-      this.queryManager.resetStore();
-    }
-  };
+  public resetStore(): Promise<ApolloQueryResult<any>[]>|null {
+    return this.queryManager ? this.queryManager.resetStore() : null;
+  }
 
   public getInitialState(): { data: Object } {
     this.initStore();
@@ -522,8 +531,9 @@ export default class ApolloClient implements DataProxy {
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
+      ssrMode: this.ssrMode,
     });
-  };
+  }
 
   /**
    * Initializes a data proxy for this client instance if one does not already
