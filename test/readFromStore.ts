@@ -6,15 +6,8 @@ import {
 } from '../src/data/readFromStore';
 
 import {
-  withError,
-} from './util/wrap';
-
-import {
   NormalizedCache,
   StoreObject,
-  IdValue,
-  StoreValue,
-  JsonValue,
 } from '../src/data/storeUtils';
 
 import {
@@ -70,7 +63,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
     });
@@ -107,48 +100,7 @@ describe('reading from the store', () => {
       variables,
     });
 
-    assert.deepEqual<{}>(result, {
-      id: 'abcd',
-      nullField: null,
-      numberField: 5,
-      stringField: 'Heyo',
-    });
-  });
-
-  it('runs a basic query with default values for arguments', () => {
-    const query = gql`
-      query someBigQuery(
-        $stringArg: String = "This is a default string!",
-        $intArg: Int = 0,
-        $floatArg: Float,
-      ){
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
-        nullField
-      }
-    `;
-
-    const variables = {
-      floatArg: 3.14,
-    };
-
-    const store = {
-      'ROOT_QUERY': {
-        id: 'abcd',
-        nullField: null,
-        'numberField({"intArg":0,"floatArg":3.14})': 5,
-        'stringField({"arg":"This is a default string!"})': 'Heyo',
-      },
-    } as NormalizedCache;
-
-    const result = readQueryFromStore({
-      store,
-      query,
-      variables,
-    });
-
-    assert.deepEqual<{}>(result, {
+    assert.deepEqual(result, {
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -177,7 +129,7 @@ describe('reading from the store', () => {
           id: 'abcde',
           generated: false,
         },
-      } as StoreObject),
+      }) as StoreObject,
       abcde: result.nestedObj,
     } as NormalizedCache;
 
@@ -196,7 +148,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: {
@@ -235,7 +187,7 @@ describe('reading from the store', () => {
           id: 'abcde',
           generated: false,
         },
-      } as StoreObject),
+      }) as StoreObject,
       abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
@@ -281,7 +233,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -300,52 +252,50 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested query with proper fragment fields in arrays', () => {
-    return withError(() => {
-      const store = {
-        'ROOT_QUERY': {
-          __typename: 'Query',
-          nestedObj: { type: 'id', id: 'abcde', generated: false },
-        } as StoreObject,
-        abcde: {
-          id: 'abcde',
-          innerArray: [{ type: 'id', generated: true, id: 'abcde.innerArray.0' } as any],
-        } as StoreObject,
-        'abcde.innerArray.0': {
-          id: 'abcdef',
-          someField: 3,
-        } as StoreObject,
-      } as NormalizedCache;
+    const store = {
+      'ROOT_QUERY': {
+        __typename: 'Query',
+        nestedObj: { type: 'id', id: 'abcde', generated: false },
+      } as StoreObject,
+      abcde: {
+        id: 'abcde',
+        innerArray: [{ type: 'id', generated: true, id: 'abcde.innerArray.0' } as any],
+      } as StoreObject,
+      'abcde.innerArray.0': {
+        id: 'abcdef',
+        someField: 3,
+      } as StoreObject,
+    } as NormalizedCache;
 
-      const queryResult = readQueryFromStore({
-        store,
-        query: gql`
-          {
-            ... on DummyQuery {
-              nestedObj {
-                innerArray { id otherField }
-              }
-            }
-            ... on Query {
-              nestedObj {
-                innerArray { id someField }
-              }
-            }
-            ... on DummyQuery2 {
-              nestedObj {
-                innerArray { id otherField2 }
-              }
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        {
+          ... on DummyQuery {
+            nestedObj {
+              innerArray { id otherField }
             }
           }
-        `,
-        fragmentMatcherFunction,
-      });
+          ... on Query {
+            nestedObj {
+              innerArray { id someField }
+            }
+          }
+          ... on DummyQuery2 {
+            nestedObj {
+              innerArray { id otherField2 }
+            }
+          }
+        }
+      `,
+      fragmentMatcherFunction,
+    });
 
-      assert.deepEqual<{}>(queryResult, {
-        nestedObj: {
-          innerArray: [{id: 'abcdef', someField: 3}],
-        },
-      });
-    }, /IntrospectionFragmentMatcher/);
+    assert.deepEqual(queryResult, {
+      nestedObj: {
+        innerArray: [{id: 'abcdef', someField: 3}],
+      },
+    });
   });
 
   it('runs a nested query with an array without IDs', () => {
@@ -371,8 +321,8 @@ describe('reading from the store', () => {
     const store = {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
+          { type: 'id', generated: true, id: 'abcd.nestedArray.0' },
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
@@ -394,7 +344,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -430,7 +380,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
@@ -451,7 +401,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -507,7 +457,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -572,7 +522,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: null,
@@ -592,7 +542,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
-      } as JsonValue }) as StoreObject,
+      }}) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -607,7 +557,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: ['one', 'two', 'three'],
@@ -627,7 +577,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
-      } as JsonValue }) as StoreObject,
+      }}) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -642,7 +592,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
@@ -681,7 +631,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -719,7 +669,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual<{}>(queryResult, {
+    assert.deepEqual(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -754,7 +704,7 @@ describe('reading from the store', () => {
           type: 'id',
           id: 'abcde',
           generated: false,
-        } as IdValue,
+        },
       }) as StoreObject,
       abcde: assign({}, data.nestedObj, {
         deepNestedObj: {
@@ -783,7 +733,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual<{}>(queryResult1, {
+    assert.deepEqual(queryResult1, {
       stringField: 'This is a string too!',
       numberField: 6,
       nullField: null,
@@ -806,7 +756,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual<{}>(queryResult2, {
+    assert.deepEqual(queryResult2, {
       stringField: 'This is a deep string',
       numberField: 7,
       nullField: null,

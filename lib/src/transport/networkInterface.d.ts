@@ -6,14 +6,14 @@ export interface Request {
     debugName?: string;
     query?: DocumentNode;
     variables?: Object;
-    operationName?: string | null;
+    operationName?: string;
     [additionalKey: string]: any;
 }
 export interface PrintedRequest {
     debugName?: string;
     query?: string;
     variables?: Object;
-    operationName?: string | null;
+    operationName?: string;
 }
 export interface NetworkInterface {
     [others: string]: any;

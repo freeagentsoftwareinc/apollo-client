@@ -1,7 +1,7 @@
 import { ApolloAction } from '../actions';
 export declare type MutationQueryReducer = (previousResult: Object, options: {
     mutationResult: Object;
-    queryName: string | null;
+    queryName: Object;
     queryVariables: Object;
 }) => Object;
 export declare type MutationQueryReducersMap = {

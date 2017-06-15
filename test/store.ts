@@ -5,10 +5,7 @@ import gql from 'graphql-tag';
 import {
   Store,
   createApolloStore,
-  ReducerError,
 } from '../src/store';
-
-import {getOperationName} from '../src/queries/getFromAST';
 
 describe('createApolloStore', () => {
   it('does not require any arguments', () => {
@@ -179,7 +176,6 @@ describe('createApolloStore', () => {
       queryId: 'test.0',
       queryString: '',
       document: queryDocument,
-      operationName: getOperationName(queryDocument),
       variables: {},
       fetchPolicy: 'cache-first',
       requestId: 1,
@@ -235,7 +231,7 @@ describe('createApolloStore', () => {
       extraReducers: [() => { throw new Error('test!!!'); }],
     });
 
-    assert(/test!!!/.test(store.getState().apollo.reducerError.error));
+    assert(/test!!!/.test(store.getState().apollo.reducerError));
 
     const resetState = {
       queries: {},
@@ -258,7 +254,7 @@ describe('createApolloStore', () => {
           },
         },
       ],
-      reducerError: (null as ReducerError | null),
+      reducerError: (null as Error | null),
     };
 
     store.dispatch({

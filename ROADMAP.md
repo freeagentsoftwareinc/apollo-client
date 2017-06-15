@@ -1,28 +1,48 @@
-# Apollo Client
+# Apollo Client Roadmap to version 1.0
+expected by January 2017
 
-This is the high-level roadmap for Apollo Client that lists our priorities for the next months. This only lists work that is planned for Apollo Client, and doesn't include work that we will be doing on other projects like apollo-codegen, graphql-subscriptions, etc. in which we are also investing a lot of time. If you're in doubt whether something is on the roadmap for Apollo overall, it's best to open an issue on apollographql/apollo and ask
+This roadmap serves as a rough guide of features and changes we hope to accomplish until Apollo Client 1.0. There will almost certainly be things in version 1.0 that are not in this list, and there may be the odd thing on this list that doesn't make it into version 1.0.
 
-Currently, there are three high-level priorities:
+Since version 0.5 Apollo Client is already being used in production by many people, including Meteor Development Group. Version 1.0 will mark the point where we think we've reached a stable external API that will not see any breaking changes until version 2.0.
 
-1. **Pluggable store API**
-    * Apollo Store API with imperative GraphQL interface (design in progress)
-    * Lower-level key-value store (design in progress)
-    * Alignment of store API between JavaScript, iOS and Android clients (design in progress)
-    * React Native to native bridge (not started yet)
+As a reminder, here are the goals of Apollo Client as stated in the readme file:
 
-2. **Live queries**
-    * Unified Apollo Network Interface (initial draft [here](https://github.com/apollographql/apollo-network-interface))
-    * Unified Transport (work in progress [here](https://github.com/apollographql/subscriptions-transport-ws/pull/108))
-    
-3. **First-class offline support**
-    * Cache invalidation, deletion & memory management (design needed)
-    * Persistent storage and state (overlaps with Apollo Store)
-    * Automatic retries on connectivity issues (overlaps with Unified Network Interface)
-    
-    
-If you are interested in helping with any of the above, join the #contributing channel on the 
-[Apollo Slack](http://www.apollodata.com/#slack) and let us know you're interested in becoming a contributor!
- 
+1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
+2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
+3. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
+4. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
+5. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
+6. **Small and flexible**, so you don't get stuff you don't need. The core is under 40kb compressed.
+7. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
-While the above goals are our feature focus, we are also always looking to improve developer ergonomics and performance.
-If you see something that could be improved, please do not hesitate to open an issue or make a PR!
+By and large Apollo Client already does a very good job in all these dimensions. For version 1.0 we want to put special focus to deliver top of the class developer ergonomics. That means further improvements to **ease of adoption/use**, **simplicity** and **understandability**.
+
+As stated before, the list below is not exhaustive. **Apollo Client is a community effort, so if there are features you would like to see in 1.0 that are not listed below, or would like to contribute to one of the items below, please say so by posting on the appropriate issue or opening a new one for discussion!**
+
+## Features planned for 1.0
+
+### Client-side data store integration
+- [ ] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
+
+### UI integration ergonomics
+- [x] 'Immutable' results
+- [x] Deep-freezing of results in development mode
+- [x] `fetchMore` network status
+
+### Performance
+- [x] Query deduplication
+
+### GraphQL features
+- [x] detect cache collisions and return stale data instead
+
+
+## Refactors planned for 1.0
+- [x] Simplify how polling queries work
+- [x] Remove fragment handling from Apollo Client (and put it in graphql-tag)
+- [ ] Streamline network interface and API for middlewares and afterwares (in progress)
+- [x] Remove stopped queries from the store without breaking storeReset (#902)
+- [x] Find low-hanging fruit to reduce bundle size (#684)
+
+
+## Version 0.6
+- [x] Completely remove fragment logic (it's in graphql-tag now)

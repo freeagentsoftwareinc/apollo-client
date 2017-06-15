@@ -73,7 +73,6 @@ export function createStoreReducer(
         document,
         variables,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMatcherFunction: config.fragmentMatcher,
       });
     }
     return store;

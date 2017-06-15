@@ -89,7 +89,6 @@ export function data(
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -119,7 +118,6 @@ export function data(
         variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -147,7 +145,6 @@ export function data(
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // If this action wants us to update certain queries. Let’s do it!
@@ -192,7 +189,6 @@ export function data(
               variables: query.variables,
               store: newState,
               dataIdFromObject: config.dataIdFromObject,
-              fragmentMatcherFunction: config.fragmentMatcher,
             });
           }
         });
@@ -245,7 +241,6 @@ export function data(
         variables: write.variables,
         store: currentState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMatcherFunction: config.fragmentMatcher,
       }),
       { ...previousState } as NormalizedCache,
     );

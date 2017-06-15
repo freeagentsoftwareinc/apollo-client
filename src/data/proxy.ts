@@ -3,7 +3,7 @@ import { ApolloStore, Store, ApolloReducerConfig } from '../store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
-import {getFragmentQueryDocument, getOperationName} from '../queries/getFromAST';
+import { getFragmentQueryDocument } from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
@@ -70,7 +70,7 @@ export interface DataProxyWriteQueryOptions {
    * Any variables that the GraphQL query may depend on.
    */
   variables?: Object;
-}
+};
 
 export interface DataProxyWriteFragmentOptions {
   /**
@@ -245,7 +245,6 @@ export class ReduxDataProxy implements DataProxy {
         rootId: 'ROOT_QUERY',
         result: data,
         document: query,
-        operationName: getOperationName(query),
         variables: variables || {},
       }],
     });
@@ -274,7 +273,6 @@ export class ReduxDataProxy implements DataProxy {
         rootId: id,
         result: data,
         document,
-        operationName: getOperationName(document),
         variables: variables || {},
       }],
     });
@@ -368,11 +366,6 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     this.assertNotFinished();
-
-    if (!fragment) {
-      throw new Error('fragment option is required. Please pass a GraphQL fragment to readFragment.');
-    }
-
     const { data } = this;
     let query = getFragmentQueryDocument(fragment, fragmentName);
 
@@ -416,7 +409,6 @@ export class TransactionDataProxy implements DataProxy {
       rootId: 'ROOT_QUERY',
       result: data,
       document: query,
-      operationName: getOperationName(query),
       variables: variables || {},
     });
   }
@@ -435,10 +427,6 @@ export class TransactionDataProxy implements DataProxy {
   }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
 
-    if (!fragment) {
-      throw new Error('fragment option is required. Please pass a GraphQL fragment to writeFragment.');
-    }
-
     let query = getFragmentQueryDocument(fragment, fragmentName);
 
     if (this.reducerConfig.addTypename) {
@@ -449,7 +437,6 @@ export class TransactionDataProxy implements DataProxy {
       rootId: id,
       result: data,
       document: query,
-      operationName: getOperationName(query),
       variables: variables || {},
     });
   }
@@ -476,7 +463,6 @@ export class TransactionDataProxy implements DataProxy {
       variables: write.variables,
       store: this.data,
       dataIdFromObject: this.reducerConfig.dataIdFromObject || (() => null),
-      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
     this.writes.push(write);
   }

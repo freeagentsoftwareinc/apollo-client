@@ -1,6 +1,5 @@
 import 'es6-promise';
 import 'isomorphic-fetch';
-import './warnOnce';
 import './fragmentMatcher';
 import './writeToStore';
 import './readFromStore';

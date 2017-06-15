@@ -5,10 +5,6 @@ import ApolloClient, { toIdValue } from '../src';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
-import {
-  ApolloQueryResult,
-} from '../src/core/types';
-
 describe('custom resolvers', () => {
   it(`works for cache redirection`, () => {
     const dataIdFromObject = (obj: any) => {
@@ -50,7 +46,7 @@ describe('custom resolvers', () => {
     return client.query({ query: listQuery }).then(() => {
       return client.query({ query: itemQuery });
     }).then((itemResult) => {
-      assert.deepEqual<ApolloQueryResult<{}>>(itemResult, {
+      assert.deepEqual(itemResult, {
         loading: false,
         networkStatus: NetworkStatus.ready,
         stale: false,

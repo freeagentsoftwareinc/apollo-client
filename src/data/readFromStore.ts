@@ -20,7 +20,6 @@ import {
 } from './storeUtils';
 
 import {
-  getDefaultValues,
   getQueryDefinition,
 } from '../queries/getFromAST';
 
@@ -31,10 +30,6 @@ import {
 import {
   isEqual,
 } from '../util/isEqual';
-
-import {
-  assign,
-} from '../util/assign';
 
 import {
   isTest,
@@ -207,9 +202,7 @@ export function diffQueryAgainstStore({
   config,
 }: DiffQueryAgainstStoreOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
-  const queryDefinition = getQueryDefinition(query);
-
-  variables = assign({}, getDefaultValues(queryDefinition), variables);
+  getQueryDefinition(query);
 
   const context: ReadStoreContext = {
     // Global settings
@@ -289,8 +282,7 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
     // using the private `ID_KEY` property that is added in `resultMapper`.
     if (Array.isArray(previousResult)) {
       previousResult.forEach(item => {
-        // item can be null
-        if (item && item[ID_KEY]) {
+        if (item[ID_KEY]) {
           idToPreviousResult[item[ID_KEY]] = item;
         }
       });

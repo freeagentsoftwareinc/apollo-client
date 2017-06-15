@@ -354,11 +354,11 @@ describe('QueryScheduler', () => {
       },
     };
     const interval = 20000;
-    const queryOptions1: WatchQueryOptions = {
+    const queryOptions1 = {
       query: query1,
       pollInterval: interval,
     };
-    const queryOptions2: WatchQueryOptions = {
+    const queryOptions2 = {
       query: query2,
       pollInterval: interval,
     };
@@ -396,7 +396,7 @@ describe('QueryScheduler', () => {
 
     const keys = Object.keys(scheduler.intervalQueries);
     assert.equal(keys.length, 1);
-    assert.equal(keys[0], String(interval));
+    assert.equal(keys[0], interval);
 
     const queryIds = (<any>scheduler.intervalQueries)[keys[0]];
     assert.equal(queryIds.length, 2);

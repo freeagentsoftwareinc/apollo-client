@@ -25,7 +25,6 @@ console.warn = console.error = (...messages: string[]) => {
 
 process.on('unhandledRejection', () => {});
 
-import './warnOnce';
 import './fragmentMatcher';
 import './writeToStore';
 import './readFromStore';

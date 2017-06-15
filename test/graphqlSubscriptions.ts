@@ -31,8 +31,6 @@ describe('GraphQL Subscriptions', () => {
   let options: any;
   let watchQueryOptions: any;
   let sub2: any;
-  let defaultOptions: any;
-  let defaultSub1: any;
   let commentsQuery: any;
   let commentsVariables: any;
   let commentsSub: any;
@@ -69,34 +67,6 @@ describe('GraphQL Subscriptions', () => {
       variables: {
           name: 'Changping Chen',
         },
-    };
-
-
-    defaultSub1 = {
-      request: {
-        query: gql`
-          subscription UserInfo($name: String = "Changping Chen") {
-            user(name: $name) {
-              name
-            }
-          }
-        `,
-        variables: {
-          name: 'Changping Chen',
-        },
-      },
-      id: 0,
-      results: [...results],
-    };
-
-    defaultOptions = {
-      query: gql`
-        subscription UserInfo($name: String = "Changping Chen") {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
     };
 
     watchQueryOptions = {
@@ -175,32 +145,6 @@ describe('GraphQL Subscriptions', () => {
 
 
   it('should start a subscription on network interface and unsubscribe', (done) => {
-    const network = mockSubscriptionNetworkInterface([defaultSub1]);
-    // This test calls directly through Apollo Client
-    const client = new ApolloClient({
-      networkInterface: network,
-      addTypename: false,
-    });
-
-    const sub = client.subscribe(defaultOptions).subscribe({
-      next(result) {
-        assert.deepEqual(result, results[0].result);
-
-        // Test unsubscribing
-        sub.unsubscribe();
-        assert.equal(Object.keys(network.mockedSubscriptionsById).length, 0);
-
-        done();
-      },
-    });
-
-    const id = (sub as any)._networkSubscriptionId;
-    network.fireResult(id);
-
-    assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
-  });
-
-  it('should subscribe with default values', (done) => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -250,7 +194,7 @@ describe('GraphQL Subscriptions', () => {
     }) as any;
 
     // Subscribe again. Should also receive the same result.
-    const resub = obs.subscribe({
+    obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
         counter++;

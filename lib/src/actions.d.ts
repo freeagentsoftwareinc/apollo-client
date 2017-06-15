@@ -8,7 +8,7 @@ export declare type QueryResultAction = {
     result: ExecutionResult;
     queryId: string;
     document: DocumentNode;
-    operationName: string | null;
+    operationName: string;
     requestId: number;
     fetchMoreForQueryId?: string;
     extraReducers?: ApolloReducer[];
@@ -26,7 +26,6 @@ export interface QueryInitAction {
     type: 'APOLLO_QUERY_INIT';
     queryString: string;
     document: DocumentNode;
-    operationName: string | null;
     variables: Object;
     fetchPolicy: FetchPolicy;
     queryId: string;
@@ -41,7 +40,6 @@ export declare function isQueryInitAction(action: ApolloAction): action is Query
 export interface QueryResultClientAction {
     type: 'APOLLO_QUERY_RESULT_CLIENT';
     result: ExecutionResult;
-    operationName: string | null;
     complete: boolean;
     queryId: string;
     requestId: number;
@@ -57,9 +55,9 @@ export interface MutationInitAction {
     mutationString: string;
     mutation: DocumentNode;
     variables: Object;
-    operationName: string | null;
+    operationName: string;
     mutationId: string;
-    optimisticResponse: Object | Function | undefined;
+    optimisticResponse: Object | undefined;
     extraReducers?: ApolloReducer[];
     updateQueries?: {
         [queryId: string]: MutationQueryReducer;
@@ -71,7 +69,7 @@ export interface MutationResultAction {
     type: 'APOLLO_MUTATION_RESULT';
     result: ExecutionResult;
     document: DocumentNode;
-    operationName: string | null;
+    operationName: string;
     variables: Object;
     mutationId: string;
     extraReducers?: ApolloReducer[];
@@ -91,7 +89,6 @@ export interface UpdateQueryResultAction {
     type: 'APOLLO_UPDATE_QUERY_RESULT';
     variables: any;
     document: DocumentNode;
-    operationName: string | null;
     newResult: Object;
 }
 export declare function isUpdateQueryResultAction(action: ApolloAction): action is UpdateQueryResultAction;
@@ -106,7 +103,7 @@ export interface SubscriptionResultAction {
     subscriptionId: number;
     variables: Object;
     document: DocumentNode;
-    operationName: string | null;
+    operationName: string;
     extraReducers?: ApolloReducer[];
 }
 export declare function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction;
@@ -114,7 +111,6 @@ export interface DataWrite {
     rootId: string;
     result: any;
     document: DocumentNode;
-    operationName: string | null;
     variables: Object;
 }
 export interface WriteAction {

@@ -4,7 +4,7 @@ import { ApolloStore, Store, ApolloReducerConfig } from '../store';
 import { NormalizedCache } from '../data/storeUtils';
 import { DataProxy } from '../data/proxy';
 import { FragmentMatcherInterface } from '../data/fragmentMatcher';
-import { ExecutionResult, DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { MutationQueryReducersMap } from '../data/mutationResults';
 import { QueryScheduler } from '../scheduler/scheduler';
 import { ApolloStateSelector } from '../ApolloClient';
@@ -18,7 +18,6 @@ export declare class QueryManager {
     scheduler: QueryScheduler;
     store: ApolloStore;
     networkInterface: NetworkInterface;
-    ssrMode: boolean;
     private addTypename;
     private deduplicator;
     private reduxRootSelector;
@@ -31,7 +30,7 @@ export declare class QueryManager {
     private fetchQueryPromises;
     private observableQueries;
     private queryIdsByName;
-    constructor({networkInterface, store, reduxRootSelector, reducerConfig, fragmentMatcher, addTypename, queryDeduplication, ssrMode}: {
+    constructor({networkInterface, store, reduxRootSelector, reducerConfig, fragmentMatcher, addTypename, queryDeduplication}: {
         networkInterface: NetworkInterface;
         store: ApolloStore;
         reduxRootSelector: ApolloStateSelector;
@@ -39,18 +38,17 @@ export declare class QueryManager {
         reducerConfig?: ApolloReducerConfig;
         addTypename?: boolean;
         queryDeduplication?: boolean;
-        ssrMode?: boolean;
     });
     broadcastNewStore(store: any): void;
     mutate<T>({mutation, variables, optimisticResponse, updateQueries: updateQueriesByName, refetchQueries, update: updateWithProxyFn}: {
         mutation: DocumentNode;
         variables?: Object;
-        optimisticResponse?: Object | Function;
+        optimisticResponse?: Object;
         updateQueries?: MutationQueryReducersMap;
         refetchQueries?: string[] | PureQueryOptions[];
         update?: (proxy: DataProxy, mutationResult: Object) => void;
-    }): Promise<ExecutionResult>;
-    fetchQuery<T>(queryId: string, options: WatchQueryOptions, fetchType?: FetchType, fetchMoreForQueryId?: string): Promise<ExecutionResult>;
+    }): Promise<ApolloQueryResult<T>>;
+    fetchQuery<T>(queryId: string, options: WatchQueryOptions, fetchType?: FetchType, fetchMoreForQueryId?: string): Promise<ApolloQueryResult<T>>;
     queryListenerForObserver<T>(queryId: string, options: WatchQueryOptions, observer: Observer<ApolloQueryResult<T>>): QueryListener;
     watchQuery<T>(options: WatchQueryOptions, shouldSubscribe?: boolean): ObservableQuery<T>;
     query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>;
@@ -67,10 +65,9 @@ export declare class QueryManager {
     removeFetchQueryPromise(requestId: number): void;
     addObservableQuery<T>(queryId: string, observableQuery: ObservableQuery<T>): void;
     removeObservableQuery(queryId: string): void;
-    resetStore(): Promise<ApolloQueryResult<any>[]>;
+    resetStore(): void;
     startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener): string;
     startGraphQLSubscription(options: SubscriptionOptions): Observable<any>;
-    removeQuery(queryId: string): void;
     stopQuery(queryId: string): void;
     getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>, isOptimistic?: boolean): any;
     getQueryWithPreviousResult<T>(queryIdOrObservable: string | ObservableQuery<T>, isOptimistic?: boolean): {

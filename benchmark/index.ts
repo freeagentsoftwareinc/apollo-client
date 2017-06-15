@@ -85,7 +85,7 @@ const createReservations = (count: number) => {
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
-    const c = new ApolloClient({});
+    new ApolloClient({});
     done();
   });
   end();

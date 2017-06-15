@@ -80,11 +80,6 @@ export class QueryScheduler {
       throw new Error('Attempted to start a polling query without a polling interval.');
     }
 
-    if (this.queryManager.ssrMode) {
-      // Do not poll in SSR mode
-      return queryId;
-    }
-
     this.registeredQueries[queryId] = options;
 
     if (listener) {
