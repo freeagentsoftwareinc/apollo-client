@@ -8,12 +8,18 @@ export { getDataWithOptimisticResults };
 import { ApolloAction } from './actions';
 import { IdGetter } from './core/types';
 import { CustomResolverMap } from './data/readFromStore';
+export interface ReducerError {
+    error: Error;
+    queryId?: string;
+    mutationId?: string;
+    subscriptionId?: number;
+}
 export interface Store {
     data: NormalizedCache;
     queries: QueryStore;
     mutations: MutationStore;
     optimistic: OptimisticStore;
-    reducerError: Error | null;
+    reducerError: ReducerError | null;
 }
 export interface ApolloStore {
     dispatch: (action: ApolloAction) => void;

@@ -1,4 +1,5 @@
 import { NetworkInterface } from './transport/networkInterface';
+import { ExecutionResult } from 'graphql';
 import { FragmentMatcherInterface } from './data/fragmentMatcher';
 import { ApolloStore, ApolloReducerConfig, Store } from './store';
 import { ApolloAction } from './actions';
@@ -20,12 +21,14 @@ export default class ApolloClient implements DataProxy {
     addTypename: boolean;
     disableNetworkFetches: boolean;
     dataId: IdGetter | undefined;
+    dataIdFromObject: IdGetter | undefined;
     fieldWithArgs: (fieldName: string, args?: Object) => string;
     version: string;
     queryDeduplication: boolean;
     private devToolsHookCb;
     private proxy;
     private fragmentMatcher;
+    private ssrMode;
     constructor(options?: {
         networkInterface?: NetworkInterface;
         reduxRootSelector?: string | ApolloStateSelector;
@@ -41,7 +44,7 @@ export default class ApolloClient implements DataProxy {
     });
     watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>;
     query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>;
-    mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>>;
+    mutate<T>(options: MutationOptions): Promise<ExecutionResult>;
     subscribe(options: SubscriptionOptions): Observable<any>;
     readQuery<T>(options: DataProxyReadQueryOptions): T;
     readFragment<T>(options: DataProxyReadFragmentOptions): T | null;
@@ -51,7 +54,7 @@ export default class ApolloClient implements DataProxy {
     __actionHookForDevTools(cb: Function): void;
     middleware: () => (store: ApolloStore) => (next: any) => (action: any) => any;
     initStore(): void;
-    resetStore(): void;
+    resetStore(): Promise<ApolloQueryResult<any>[]> | null;
     getInitialState(): {
         data: Object;
     };

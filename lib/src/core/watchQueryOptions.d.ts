@@ -2,13 +2,14 @@ import { DocumentNode } from 'graphql';
 import { OperationResultReducer, MutationQueryReducersMap } from '../data/mutationResults';
 import { DataProxy } from '../data/proxy';
 import { PureQueryOptions } from './types';
-export declare type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
+export declare type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only' | 'standby';
 export interface ModifiableWatchQueryOptions {
     variables?: {
         [key: string]: any;
     };
     pollInterval?: number;
     fetchPolicy?: FetchPolicy;
+    fetchResults?: boolean;
     notifyOnNetworkStatusChange?: boolean;
     reducer?: OperationResultReducer;
 }
@@ -46,7 +47,7 @@ export interface SubscriptionOptions {
 export interface MutationOptions {
     mutation: DocumentNode;
     variables?: Object;
-    optimisticResponse?: Object;
+    optimisticResponse?: Object | Function;
     updateQueries?: MutationQueryReducersMap;
     refetchQueries?: string[] | PureQueryOptions[];
     update?: MutationUpdaterFn;
